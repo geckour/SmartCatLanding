@@ -45,15 +45,7 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         public GameObject DetectedPlanePrefab;
 
-        /// <summary>
-        /// A model to place when a raycast from a user touch hits a plane.
-        /// </summary>
-        public GameObject AndyPlanePrefab;
-
-        /// <summary>
-        /// A model to place when a raycast from a user touch hits a feature point.
-        /// </summary>
-        public GameObject AndyPointPrefab;
+        public GameObject LaprasPrefab;
 
         /// <summary>
         /// A game object parenting UI for displaying the "searching for planes" snackbar.
@@ -71,7 +63,7 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         private List<DetectedPlane> m_AllPlanes = new List<DetectedPlane>();
 
-        private List<GameObject> m_AllAndies = new List<GameObject>();
+        private List<GameObject> m_AllLapras = new List<GameObject>();
 
         /// <summary>
         /// True if the app is in the process of quitting due to an ARCore connection error, otherwise false.
@@ -123,53 +115,28 @@ namespace GoogleARCore.Examples.HelloAR
                 }
                 else
                 {
-                    // Choose the Andy model for the Trackable that got hit.
-                    GameObject prefab;
-                    if (hit.Trackable is FeaturePoint)
-                    {
-                        prefab = AndyPointPrefab;
-                    }
-                    else
-                    {
-                        prefab = AndyPlanePrefab;
-                    }
 
-                    //// Instantiate Andy model at the hit pose.
-                    //var pos = new Vector3(hit.Pose.position.x, hit.Pose.position.y - .2f, hit.Pose.position.z);
-                    //var andyObject = Instantiate(prefab, pos, hit.Pose.rotation);
+                    // Instantiate Andy model at the hit pose.
+                    var pos = new Vector3(hit.Pose.position.x, hit.Pose.position.y + 1f, hit.Pose.position.z);
+                    var lapras = Instantiate(LaprasPrefab, pos, hit.Pose.rotation);
 
-                    //var sphereCollider = andyObject.GetComponent<SphereCollider>();
-                    //if (!sphereCollider) sphereCollider = andyObject.AddComponent<SphereCollider>();
-                    //sphereCollider.transform.localScale = new Vector3(.1f, .1f, .1f);
-                    //andyObject.AddComponent<Rigidbody>();
-                    //var rigidBody = andyObject.GetComponent<Rigidbody>();
-                    //rigidBody.mass = 10;
+                    // Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
+                    //andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
 
-                    //// Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
-                    ////andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
+                    // Create an anchor to allow ARCore to track the hitpoint as understanding of the physical
+                    // world evolves.
+                    var anchor = hit.Trackable.CreateAnchor(hit.Pose);
 
-                    //// Create an anchor to allow ARCore to track the hitpoint as understanding of the physical
-                    //// world evolves.
-                    //var anchor = hit.Trackable.CreateAnchor(hit.Pose);
-
-                    //// Make Andy model a child of the anchor.
-                    //andyObject.transform.parent = anchor.transform;
-                    //m_AllAndies.Add(andyObject);
+                    // Make Andy model a child of the anchor.
+                    lapras.transform.parent = anchor.transform;
+                    m_AllLapras.Add(lapras);
                 }
             }
 
-            //var andyObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //andyObject.transform.position = FirstPersonCamera.transform.TransformPoint(0, 0, 0.5f);
-            //andyObject.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+            //var andyObject = Instantiate(LaprasPrefab, FirstPersonCamera.transform.TransformPoint(0, 0, 0), hit.Pose.rotation);
+            //andyObject.AddComponent<BoxCollider>();
             //andyObject.AddComponent<Rigidbody>();
             //andyObject.GetComponent<Rigidbody>().AddForce(FirstPersonCamera.transform.TransformDirection(0, 1f, 2f), ForceMode.Impulse);
-            var andyObject = Instantiate(AndyPlanePrefab, FirstPersonCamera.transform.TransformPoint(0, 0, 0), hit.Pose.rotation);
-            andyObject.AddComponent<BoxCollider>();
-            var andyCollider = andyObject.GetComponent<BoxCollider>();
-            andyCollider.size = new Vector3(.18f, .18f, .18f);
-            andyCollider.center = new Vector3(0, .18f, 0);
-            andyObject.AddComponent<Rigidbody>();
-            andyObject.GetComponent<Rigidbody>().AddForce(FirstPersonCamera.transform.TransformDirection(0, 1f, 2f), ForceMode.Impulse);
         }
 
         /// <summary>
