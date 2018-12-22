@@ -31,25 +31,6 @@ namespace GoogleARCore.Examples.Common
     {
         private static int s_PlaneCount = 0;
 
-        private readonly Color[] k_PlaneColors = new Color[]
-        {
-            new Color(1.0f, 1.0f, 1.0f),
-            new Color(0.956f, 0.262f, 0.211f),
-            new Color(0.913f, 0.117f, 0.388f),
-            new Color(0.611f, 0.152f, 0.654f),
-            new Color(0.403f, 0.227f, 0.717f),
-            new Color(0.247f, 0.317f, 0.709f),
-            new Color(0.129f, 0.588f, 0.952f),
-            new Color(0.011f, 0.662f, 0.956f),
-            new Color(0f, 0.737f, 0.831f),
-            new Color(0f, 0.588f, 0.533f),
-            new Color(0.298f, 0.686f, 0.313f),
-            new Color(0.545f, 0.764f, 0.290f),
-            new Color(0.803f, 0.862f, 0.223f),
-            new Color(1.0f, 0.921f, 0.231f),
-            new Color(1.0f, 0.756f, 0.027f)
-        };
-
         private DetectedPlane m_DetectedPlane;
 
         // Keep previous frame's mesh polygon to avoid mesh update every frame.
@@ -65,6 +46,9 @@ namespace GoogleARCore.Examples.Common
 
         private MeshRenderer m_MeshRenderer;
 
+        private LineRenderer m_LineRenderer;
+        public Material lineMaterial;
+
         /// <summary>
         /// The Unity Awake() method.
         /// </summary>
@@ -72,6 +56,10 @@ namespace GoogleARCore.Examples.Common
         {
             m_Mesh = GetComponent<MeshFilter>().mesh;
             m_MeshRenderer = GetComponent<UnityEngine.MeshRenderer>();
+            m_LineRenderer = gameObject.AddComponent<LineRenderer>();
+            m_LineRenderer.material = lineMaterial;
+            m_LineRenderer.startWidth = .001f;
+            m_LineRenderer.endWidth = .001f;
         }
 
         /// <summary>
@@ -106,8 +94,6 @@ namespace GoogleARCore.Examples.Common
         public void Initialize(DetectedPlane plane)
         {
             m_DetectedPlane = plane;
-            m_MeshRenderer.material.SetColor("_GridColor", k_PlaneColors[s_PlaneCount++ % k_PlaneColors.Length]);
-            m_MeshRenderer.material.SetFloat("_UvRotation", Random.Range(0.0f, 360.0f));
 
             Update();
         }
@@ -203,22 +189,6 @@ namespace GoogleARCore.Examples.Common
                 m_MeshIndices.Add(innerVertex2);
             }
 
-            var bound = new List<Vector3>();
-            m_DetectedPlane.GetBoundaryPolygon(bound);
-            var wallStartCount = m_MeshVertices.Count;
-            var wallVartiles = GetWallVertiles(bound, m_MeshColors);
-            m_MeshVertices.AddRange(wallVartiles);
-
-            for (int i = 0; i < bound.Count; i++)
-            {
-                m_MeshIndices.Add(wallStartCount + i * 2);
-                m_MeshIndices.Add(wallStartCount + i * 2 + 1);
-                m_MeshIndices.Add(wallStartCount + i * 2 + 2);
-                m_MeshIndices.Add(wallStartCount + i * 2 + 3);
-                m_MeshIndices.Add(wallStartCount + i * 2 + 2);
-                m_MeshIndices.Add(wallStartCount + i * 2 + 1);
-            }
-
             m_Mesh.Clear();
             m_Mesh.SetVertices(m_MeshVertices);
             m_Mesh.SetTriangles(m_MeshIndices, 0);
@@ -227,24 +197,12 @@ namespace GoogleARCore.Examples.Common
             var meshCollider = GetComponent<MeshCollider>();
             if (!meshCollider) meshCollider = gameObject.AddComponent<MeshCollider>();
             meshCollider.sharedMesh = m_Mesh;
-        }
 
-        private List<Vector3> GetWallVertiles(List<Vector3> bound, List<Color> colors)
-        {
-            var vertiles = new List<Vector3>();
-            for (int i = 0; i < bound.Count; i++)
-            {
-                vertiles.Add(new Vector3(bound[i].x, bound[i].y, bound[i].z));
-                colors.Add(Color.white);
-                vertiles.Add(new Vector3(bound[i].x, bound[i].y + 1, bound[i].z));
-                colors.Add(Color.white);
-            }
-            vertiles.Add(new Vector3(bound[0].x, bound[0].y, bound[0].z));
-            colors.Add(Color.white);
-            vertiles.Add(new Vector3(bound[0].x, bound[0].y + 1, bound[0].z));
-            colors.Add(Color.white);
-
-            return vertiles;
+            var bound = new List<Vector3>();
+            m_DetectedPlane.GetBoundaryPolygon(bound);
+            bound.Add(bound[0]);
+            m_LineRenderer.positionCount = bound.Count;
+            m_LineRenderer.SetPositions(bound.ToArray());
         }
 
         private bool _AreVerticesListsEqual(List<Vector3> firstList, List<Vector3> secondList)

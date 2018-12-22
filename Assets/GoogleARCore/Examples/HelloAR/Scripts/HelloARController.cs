@@ -63,12 +63,29 @@ namespace GoogleARCore.Examples.HelloAR
         /// </summary>
         private List<DetectedPlane> m_AllPlanes = new List<DetectedPlane>();
 
-        private List<GameObject> m_AllLapras = new List<GameObject>();
+        private List<LaprasInfo> m_AllLapras = new List<LaprasInfo>();
+
+        public Material lineMaterial;
 
         /// <summary>
         /// True if the app is in the process of quitting due to an ARCore connection error, otherwise false.
         /// </summary>
         private bool m_IsQuitting = false;
+
+        private float time = 0;
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            var i = m_AllLapras.FindIndex((obj) => obj.lapras == collision.gameObject);
+            var l = m_AllLapras[i];
+            var now = Time.time;
+            if (l.collidedTime + 2.5f < now)
+            {
+                l.collidedTime = now;
+                l.forwardForce *= -1;
+            }
+            m_AllLapras[i] = l;
+        }
 
         /// <summary>
         /// The Unity Update() method.
@@ -77,17 +94,64 @@ namespace GoogleARCore.Examples.HelloAR
         {
             _UpdateApplicationLifecycle();
 
+            time += Time.deltaTime;
+
+            foreach (LaprasInfo l in m_AllLapras)
+            {
+                var newY = l.initY + Mathf.Sin((l.initTime + time) * 1.5f) * 6.5f;
+                var coll = l.lapras.GetComponent<BoxCollider>();
+                coll.center = new Vector3(coll.center.x, newY, coll.center.z);
+
+                float forward = 0;
+
+                if (Time.time < l.collidedTime + 2)
+                {
+                    l.lapras.transform.Rotate(0, 90 * Time.deltaTime, 0);
+                }
+                else
+                {
+                    forward = l.forwardForce - Mathf.Sin(l.initTime + time * 1.5f) * .01f;
+                }
+                l.lapras.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, forward);
+            }
+
             // Hide snackbar when currently tracking at least one plane.
             Session.GetTrackables<DetectedPlane>(m_AllPlanes);
             bool showSearchingUI = true;
-            for (int i = 0; i < m_AllPlanes.Count; i++)
+            var wallVartiles = new List<Vector3>();
+            var wallIndices = new List<int>();
+
+            for (int i = 0;  i < m_AllPlanes.Count; i++)
             {
-                if (m_AllPlanes[i].TrackingState == TrackingState.Tracking)
-                {
+                var p = m_AllPlanes[i];
+
+                if (showSearchingUI && p.TrackingState == TrackingState.Tracking)
                     showSearchingUI = false;
-                    break;
+
+                var wallStartVertileCount = wallVartiles.Count;
+                var bound = new List<Vector3>();
+                p.GetBoundaryPolygon(bound);
+                wallVartiles.AddRange(GetWallVertiles(bound));
+
+                for (int j = 0; j < bound.Count; j++)
+                {
+                    wallIndices.Add(wallStartVertileCount + j * 2);
+                    wallIndices.Add(wallStartVertileCount + j * 2 + 1);
+                    wallIndices.Add(wallStartVertileCount + j * 2 + 2);
+                    wallIndices.Add(wallStartVertileCount + j * 2 + 3);
+                    wallIndices.Add(wallStartVertileCount + j * 2 + 2);
+                    wallIndices.Add(wallStartVertileCount + j * 2 + 1);
                 }
             }
+
+            var mesh = new Mesh();
+            mesh.Clear();
+            mesh.SetVertices(wallVartiles);
+            mesh.SetTriangles(wallIndices, 0);
+
+            var meshCollider = GetComponent<MeshCollider>();
+            if (!meshCollider) meshCollider = gameObject.AddComponent<MeshCollider>();
+            meshCollider.sharedMesh = mesh;
 
             SearchingForPlaneUI.SetActive(showSearchingUI);
 
@@ -117,8 +181,8 @@ namespace GoogleARCore.Examples.HelloAR
                 {
 
                     // Instantiate Andy model at the hit pose.
-                    var pos = new Vector3(hit.Pose.position.x, hit.Pose.position.y + 1f, hit.Pose.position.z);
-                    var lapras = Instantiate(LaprasPrefab, pos, hit.Pose.rotation);
+                    var lapras = Instantiate(LaprasPrefab, hit.Pose.position, new Quaternion(hit.Pose.rotation.x, hit.Pose.rotation.y - 180f, hit.Pose.rotation.z, hit.Pose.rotation.w));
+                    lapras.GetComponentsInChildren<SkinnedMeshRenderer>()[0].material.renderQueue = 3020;
 
                     // Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
                     //andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
@@ -129,7 +193,7 @@ namespace GoogleARCore.Examples.HelloAR
 
                     // Make Andy model a child of the anchor.
                     lapras.transform.parent = anchor.transform;
-                    m_AllLapras.Add(lapras);
+                    m_AllLapras.Add(new LaprasInfo(lapras));
                 }
             }
 
@@ -207,6 +271,38 @@ namespace GoogleARCore.Examples.HelloAR
                         message, 0);
                     toastObject.Call("show");
                 }));
+            }
+        }
+
+        private List<Vector3> GetWallVertiles(List<Vector3> bound)
+        {
+            var vertiles = new List<Vector3>();
+            for (int i = 0; i < bound.Count; i++)
+            {
+                vertiles.Add(new Vector3(bound[i].x, bound[i].y, bound[i].z));
+                vertiles.Add(new Vector3(bound[i].x, bound[i].y + 1, bound[i].z));
+            }
+            vertiles.Add(new Vector3(bound[0].x, bound[0].y, bound[0].z));
+            vertiles.Add(new Vector3(bound[0].x, bound[0].y + 1, bound[0].z));
+
+            return vertiles;
+        }
+
+        private struct LaprasInfo
+        {
+            public GameObject lapras;
+            public float initY;
+            public float initTime;
+            public float forwardForce;
+            public float collidedTime;
+
+            public LaprasInfo(GameObject lapras)
+            {
+                this.lapras = lapras;
+                this.initY = lapras.GetComponent<BoxCollider>().center.y;
+                this.initTime = Time.time;
+                this.forwardForce = -.3f;
+                this.collidedTime = 0;
             }
         }
     }
