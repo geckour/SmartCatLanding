@@ -226,7 +226,7 @@ GameObject:
   - component: {fileID: 4751877812724372}
   - component: {fileID: 95443977361270040}
   - component: {fileID: 54150682052847492}
-  - component: {fileID: 8976251645867958728}
+  - component: {fileID: 4607069945314862399}
   m_Layer: 0
   m_Name: LaprasPrefab
   m_TagString: Untagged
@@ -247,6 +247,7 @@ Transform:
   m_Children:
   - {fileID: 4315577437338452}
   - {fileID: 4077270283422976}
+  - {fileID: 6054114687357461717}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -277,7 +278,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1150643188649064}
   serializedVersion: 2
-  m_Mass: 10
+  m_Mass: 0.1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
@@ -285,8 +286,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &8976251645867958728
-BoxCollider:
+--- !u!64 &4607069945314862399
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -295,9 +296,10 @@ BoxCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 357.6158, y: 167.054, z: 281.9972}
-  m_Center: {x: 0, y: 125.1947, z: 15.010604}
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_Mesh: {fileID: 0}
 --- !u!1 &1160904324575302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1061,3 +1063,134 @@ Transform:
   m_Father: {fileID: 4515259863017928}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &757798754004872558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 1982517541906103847}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6054114687357461717}
+  m_Layer: 0
+  m_Name: Cylinder (Missing Prefab)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6054114687357461717
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 1982517541906103847}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 757798754004872558}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 8531083795135912796}
+  m_Father: {fileID: 4751877812724372}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4767737154306205784
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 1982517541906103847}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8531083795135912796}
+  m_Layer: 0
+  m_Name: Missing Prefab (Dummy)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8531083795135912796
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+    type: 3}
+  m_PrefabInstance: {fileID: 1982517541906103847}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4767737154306205784}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 6054114687357461717}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1982517541906103847
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 4751877812724372}
+    m_Modifications:
+    - target: {fileID: 2789710274746582168, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_Name
+      value: Cylinder
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7919349804283585915, guid: 0861b2fa66e434505bedbe6be2dedc0d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0861b2fa66e434505bedbe6be2dedc0d, type: 3}

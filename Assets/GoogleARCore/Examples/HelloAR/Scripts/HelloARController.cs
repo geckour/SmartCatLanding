@@ -79,10 +79,17 @@ namespace GoogleARCore.Examples.HelloAR
             var i = m_AllLapras.FindIndex((obj) => obj.lapras == collision.gameObject);
             var l = m_AllLapras[i];
             var now = Time.time;
-            if (l.collidedTime + 2.5f < now)
+            if (l.changeDistTime + l.changeDistInterval + 1 < now)
             {
-                l.collidedTime = now;
-                l.forwardForce *= -1;
+                l.changeDistTime = now;
+                var interval = Random.Range(110 / l.rotateForce, 250 / l.rotateForce);
+                l.rotateForce = Mathf.Abs(l.rotateForce);
+                if (interval > 180 / l.rotateForce)
+                {
+                    interval -= 180 / l.rotateForce;
+                    l.rotateForce *= -1;
+                }
+                l.changeDistInterval = interval;
             }
             m_AllLapras[i] = l;
         }
@@ -96,42 +103,43 @@ namespace GoogleARCore.Examples.HelloAR
 
             time += Time.deltaTime;
 
-            foreach (LaprasInfo l in m_AllLapras)
+            for (int i = 0; i < m_AllLapras.Count; i++)
             {
-                var newY = l.initY + Mathf.Sin((l.initTime + time) * 1.5f) * 6.5f;
-                var coll = l.lapras.GetComponent<BoxCollider>();
-                coll.center = new Vector3(coll.center.x, newY, coll.center.z);
+                var l = m_AllLapras[i];
+
+                var newY = l.initY + Mathf.Sin((l.initTime + time) * 1.5f) * 8f;
+                l.lapras.GetComponent<MeshCollider>().sharedMesh = GetCylinderMesh(200, 200, newY);
 
                 float forward = 0;
 
-                if (Time.time < l.collidedTime + 2)
+                if (Time.time < l.changeDistTime + l.changeDistInterval)
                 {
-                    l.lapras.transform.Rotate(0, 90 * Time.deltaTime, 0);
+                    l.lapras.transform.Rotate(0, l.rotateForce * (1 - Mathf.Sin((l.initTime + time) * 1.5f) * .02f) * Time.deltaTime, 0);
                 }
                 else
                 {
-                    forward = l.forwardForce - Mathf.Sin(l.initTime + time * 1.5f) * .01f;
+                    forward = l.forwardForce * (1 - Mathf.Sin((l.initTime + time) * 1.5f) * .02f) * Time.deltaTime;
                 }
-                l.lapras.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, forward);
+                l.lapras.transform.position += l.lapras.transform.forward.normalized * forward;
             }
 
             // Hide snackbar when currently tracking at least one plane.
             Session.GetTrackables<DetectedPlane>(m_AllPlanes);
             bool showSearchingUI = true;
-            var wallVartiles = new List<Vector3>();
+            var wallvertiles = new List<Vector3>();
             var wallIndices = new List<int>();
 
-            for (int i = 0;  i < m_AllPlanes.Count; i++)
+            for (int i = 0; i < m_AllPlanes.Count; i++)
             {
                 var p = m_AllPlanes[i];
 
                 if (showSearchingUI && p.TrackingState == TrackingState.Tracking)
                     showSearchingUI = false;
 
-                var wallStartVertileCount = wallVartiles.Count;
+                var wallStartVertileCount = wallvertiles.Count;
                 var bound = new List<Vector3>();
                 p.GetBoundaryPolygon(bound);
-                wallVartiles.AddRange(GetWallVertiles(bound));
+                wallvertiles.AddRange(GetWallVertiles(bound, 1));
 
                 for (int j = 0; j < bound.Count; j++)
                 {
@@ -146,7 +154,7 @@ namespace GoogleARCore.Examples.HelloAR
 
             var mesh = new Mesh();
             mesh.Clear();
-            mesh.SetVertices(wallVartiles);
+            mesh.SetVertices(wallvertiles);
             mesh.SetTriangles(wallIndices, 0);
 
             var meshCollider = GetComponent<MeshCollider>();
@@ -180,18 +188,16 @@ namespace GoogleARCore.Examples.HelloAR
                 else
                 {
 
-                    // Instantiate Andy model at the hit pose.
-                    var lapras = Instantiate(LaprasPrefab, hit.Pose.position, new Quaternion(hit.Pose.rotation.x, hit.Pose.rotation.y - 180f, hit.Pose.rotation.z, hit.Pose.rotation.w));
+                    // Instantiate Lapras model at the hit pose.
+                    var lapras = Instantiate(LaprasPrefab, hit.Pose.position, Quaternion.identity);
+                    lapras.transform.Rotate(Vector3.up, Random.Range(0f, 360f));
                     lapras.GetComponentsInChildren<SkinnedMeshRenderer>()[0].material.renderQueue = 3020;
-
-                    // Compensate for the hitPose rotation facing away from the raycast (i.e. camera).
-                    //andyObject.transform.Rotate(0, k_ModelRotation, 0, Space.Self);
 
                     // Create an anchor to allow ARCore to track the hitpoint as understanding of the physical
                     // world evolves.
                     var anchor = hit.Trackable.CreateAnchor(hit.Pose);
 
-                    // Make Andy model a child of the anchor.
+                    // Make Lapras model a child of the anchor.
                     lapras.transform.parent = anchor.transform;
                     m_AllLapras.Add(new LaprasInfo(lapras));
                 }
@@ -274,18 +280,47 @@ namespace GoogleARCore.Examples.HelloAR
             }
         }
 
-        private List<Vector3> GetWallVertiles(List<Vector3> bound)
+        static private List<Vector3> GetWallVertiles(List<Vector3> bound, float height)
         {
             var vertiles = new List<Vector3>();
             for (int i = 0; i < bound.Count; i++)
             {
                 vertiles.Add(new Vector3(bound[i].x, bound[i].y, bound[i].z));
-                vertiles.Add(new Vector3(bound[i].x, bound[i].y + 1, bound[i].z));
+                vertiles.Add(new Vector3(bound[i].x, bound[i].y + height, bound[i].z));
             }
             vertiles.Add(new Vector3(bound[0].x, bound[0].y, bound[0].z));
-            vertiles.Add(new Vector3(bound[0].x, bound[0].y + 1, bound[0].z));
+            vertiles.Add(new Vector3(bound[0].x, bound[0].y + height, bound[0].z));
 
             return vertiles;
+        }
+
+        static private Mesh GetCylinderMesh(float radius, float height, float bottomY)
+        {
+            var vertileCount = 36;
+            var circle = new List<Vector3>();
+            for (int i = 0; i < vertileCount; i++)
+            {
+                circle.Add(new Vector3(Mathf.Sin(Mathf.PI * 2 * i / vertileCount) * radius, bottomY, Mathf.Cos(Mathf.PI * 2 * i / vertileCount) * radius));
+            }
+
+            var vertiles = GetWallVertiles(circle, height);
+            var indices = new List<int>();
+
+            for (int i = 0; i < vertileCount; i++)
+            {
+                indices.Add(i * 2);
+                indices.Add(i * 2 + 1);
+                indices.Add(i * 2 + 2);
+                indices.Add(i * 2 + 3);
+                indices.Add(i * 2 + 2);
+                indices.Add(i * 2 + 1);
+            }
+            var mesh = new Mesh();
+            mesh.Clear();
+            mesh.SetVertices(vertiles);
+            mesh.SetTriangles(indices, 0);
+
+            return mesh;
         }
 
         private struct LaprasInfo
@@ -294,15 +329,20 @@ namespace GoogleARCore.Examples.HelloAR
             public float initY;
             public float initTime;
             public float forwardForce;
-            public float collidedTime;
+            public float rotateForce;
+            public float changeDistTime;
+            public float changeDistInterval;
 
             public LaprasInfo(GameObject lapras)
             {
                 this.lapras = lapras;
-                this.initY = lapras.GetComponent<BoxCollider>().center.y;
+                this.initY = 40;
                 this.initTime = Time.time;
-                this.forwardForce = -.3f;
-                this.collidedTime = 0;
+                this.forwardForce = .06f;
+                this.rotateForce = 30f;
+                this.changeDistTime = 0;
+                this.changeDistInterval = 0;
+                lapras.GetComponent<MeshCollider>().sharedMesh = GetCylinderMesh(200, 200, initY);
             }
         }
     }
